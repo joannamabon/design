@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tombola — Joanna Mabon</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --s: 1; }
+    body {
+      background: #B34916;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .scene {
+      width:       calc(440px * var(--s));
+      height:      calc(160px * var(--s));
+      perspective: calc(700px * var(--s));
+      overflow: hidden;
+    }
+    .drum {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: spin 7s linear infinite;
+    }
+    .face {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden;
+      transform: rotateX(var(--rot,0deg)) translateZ(calc(110.1px * var(--s)));
+    }
+    .face svg { display: block; width: 100%; height: 100%; }
+    @keyframes spin {
+      0%      { transform: rotateX(0deg); }
+      14.286% { transform: rotateX(0deg);   animation-timing-function: cubic-bezier(.4,0,.2,1); }
+      20%     { transform: rotateX(72deg);  }
+      34.286% { transform: rotateX(72deg);  animation-timing-function: cubic-bezier(.4,0,.2,1); }
+      40%     { transform: rotateX(144deg); }
+      54.286% { transform: rotateX(144deg); animation-timing-function: cubic-bezier(.4,0,.2,1); }
+      60%     { transform: rotateX(216deg); }
+      74.286% { transform: rotateX(216deg); animation-timing-function: cubic-bezier(.4,0,.2,1); }
+      80%     { transform: rotateX(288deg); }
+      94.286% { transform: rotateX(288deg); animation-timing-function: cubic-bezier(.4,0,.2,1); }
+      100%    { transform: rotateX(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scene">
+    <div class="drum">
+
+      <div class="face" style="--rot:0deg">
+        <svg id="f0" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+          <text id="n0" x="71" font-family="'Bangla MN'" font-weight="bold" fill="#F5EFE8">Joanna Mabon</text>
+        </svg>
+      </div>
+
+      <div class="face" style="--rot:288deg">
+        <svg id="f1" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+          <text fill="#F5EFE8">
+            <tspan id="n1" x="71" font-family="'Bangla MN'" font-weight="bold">Joanna Mabon</tspan>
+            <tspan id="r1" x="71" font-family="'Big Caslon Medium'">Service design</tspan>
+          </text>
+        </svg>
+      </div>
+
+      <div class="face" style="--rot:216deg">
+        <svg id="f2" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+          <text fill="#F5EFE8">
+            <tspan id="n2" x="71" font-family="'Bangla MN'" font-weight="bold">Joanna Mabon</tspan>
+            <tspan id="r2" x="71" font-family="'Big Caslon Medium'">Product design</tspan>
+          </text>
+        </svg>
+      </div>
+
+      <div class="face" style="--rot:144deg">
+        <svg id="f3" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+          <text fill="#F5EFE8">
+            <tspan id="n3" x="71" font-family="'Bangla MN'" font-weight="bold">Joanna Mabon</tspan>
+            <tspan id="r3" x="71" font-family="'Big Caslon Medium'">Product strategy</tspan>
+          </text>
+        </svg>
+      </div>
+
+      <div class="face" style="--rot:72deg">
+        <svg id="f4" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+          <text fill="#F5EFE8">
+            <tspan id="n4" x="71" font-family="'Bangla MN'" font-weight="bold">Joanna Mabon</tspan>
+            <tspan id="r4" x="71" font-family="'Big Caslon Medium'">User research</tspan>
+          </text>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Responsive scale ──────────────────────────────────────────────────
+    function resize() {
+      document.documentElement.style.setProperty('--s',
+        Math.min(window.innerWidth / 440, window.innerHeight / 160));
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── Canvas-based text measurement (no DOM layout needed) ──────────────
+    var ctx = document.createElement('canvas').getContext('2d');
+
+    var PADL   = 71;          // left margin in SVG units
+    var PADR   = 71;          // right padding — mirrors left for balanced margins
+    var VBW    = 440;
+    var VBH    = 160;
+    var GAP    = 12;          // gap between name and role baselines (extra)
+    var MAX_W  = VBW - PADL - PADR;  // 349 SVG units
+
+    function textWidth(str, fontStr) {
+      ctx.font = fontStr;
+      return ctx.measureText(str).width;
+    }
+
+    function fitSize(str, fontStr, maxW, startSz) {
+      // fontStr should contain %SIZE% as placeholder, e.g. "bold %SIZE%px 'Bangla MN'"
+      var sz = startSz;
+      while (sz > 6) {
+        var w = textWidth(str, fontStr.replace('%SIZE%', sz));
+        if (w <= maxW) return sz;
+        sz -= 0.5;
+      }
+      return sz;
+    }
+
+    function metrics(str, fontStr) {
+      ctx.font = fontStr;
+      var m = ctx.measureText(str);
+      return {
+        w:       m.width,
+        ascent:  m.actualBoundingBoxAscent,
+        descent: m.actualBoundingBoxDescent,
+        height:  m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
+      };
+    }
+
+    // Fit name (use 'Joanna Mabon' — shorter than any role but sets the standard)
+    var nSz = fitSize('Joanna Mabon',    "bold %SIZE%px 'Bangla MN'",       MAX_W, 80);
+    // Role capped at name size so name always dominates visually
+    var rSz = Math.min(fitSize('Product strategy', "%SIZE%px 'Big Caslon Medium'", MAX_W, 80), nSz);
+
+    // Measure actual glyph heights at fitted sizes
+    var nM  = metrics('Joanna Mabon',     "bold " + nSz + "px 'Bangla MN'");
+    var rM  = metrics('Product strategy', rSz + "px 'Big Caslon Medium'");
+
+    // ── Vertical layout ───────────────────────────────────────────────────
+    // Single-line: name centred — baseline so glyph is centred in VBH
+    var nY_single = (VBH / 2) + (nM.ascent - nM.descent) / 2;
+
+    // Two-line: group centred
+    var blockH  = nM.height + GAP + rM.height;
+    var topY    = (VBH - blockH) / 2;
+    var nY_two  = topY + nM.ascent;
+    var rY_two  = topY + nM.height + GAP + rM.ascent;
+
+    // ── Apply to SVG elements ─────────────────────────────────────────────
+    var n0 = document.getElementById('n0');
+    n0.setAttribute('font-size', nSz);
+    n0.setAttribute('y', nY_single.toFixed(1));
+
+    for (var i = 1; i <= 4; i++) {
+      var ni = document.getElementById('n' + i);
+      var ri = document.getElementById('r' + i);
+      ni.setAttribute('font-size', nSz);
+      ni.setAttribute('y', nY_two.toFixed(1));
+      ri.setAttribute('font-size', rSz);
+      ri.setAttribute('y', rY_two.toFixed(1));
+    }
+  </script>
+</body>
+</html>
